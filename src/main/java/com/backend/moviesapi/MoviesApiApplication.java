@@ -1,4 +1,4 @@
-package com.backend.movies_api;
+package com.backend.moviesapi;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

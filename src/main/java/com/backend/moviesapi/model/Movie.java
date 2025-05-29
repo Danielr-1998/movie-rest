@@ -1,4 +1,4 @@
-package com.backend.movies_api.model;
+package com.backend.moviesapi.model;
 
 
 import lombok.AllArgsConstructor;
