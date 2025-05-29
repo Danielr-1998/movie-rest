@@ -12,19 +12,31 @@ jobs:
       - name: 🧾 Checkout código
         uses: actions/checkout@v3
 
-      - name: 🔧 Configurar clave SSH
+      - name: 🔐 Configurar clave SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          echo "EC2_HOST=${{ secrets.EC2_HOST }}"  # debug temporal
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
-      - name: 🐳 Subir y desplegar proyecto en EC2
+      - name: 🚀 Desplegar en EC2
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
             set -e
-            echo "🔁 Clonando código"
+
+            echo "📦 Verificando Java..."
+            if ! java -version &>/dev/null; then
+              echo "⚙️ Instalando OpenJDK 17..."
+              sudo apt update && sudo apt install openjdk-17-jdk -y
+            fi
+
+            echo "📦 Verificando Maven..."
+            if ! mvn -v &>/dev/null && [ ! -f mvnw ]; then
+              echo "⚙️ Instalando Maven..."
+              sudo apt install maven -y
+            fi
+
+            echo "🔁 Clonando o actualizando repositorio..."
             mkdir -p ~/movies-api
             cd ~/movies-api
 
@@ -33,16 +45,21 @@ jobs:
             else
               git pull origin main
             fi
+
+            echo "🔧 Dando permisos al wrapper Maven..."
             chmod +x mvnw
 
-            echo "🔨 Construyendo JAR"
+            echo "⚙️ Configurando JAVA_HOME..."
+            export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
+
+            echo "🔨 Construyendo JAR..."
             ./mvnw clean package
 
-            echo "🐳 Reconstruyendo imagen Docker"
+            echo "🐳 Reconstruyendo imagen Docker..."
             docker stop movies-api || true
             docker rm movies-api || true
             docker build -t movies-api .
 
-            echo "🚀 Ejecutando contenedor"
+            echo "🚀 Ejecutando contenedor en segundo plano..."
             docker run -d --name movies-api -p 8080:8080 movies-api
           EOF
