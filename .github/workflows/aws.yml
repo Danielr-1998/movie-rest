@@ -33,6 +33,7 @@ jobs:
             else
               git pull origin main
             fi
+            chmod +x mvnw
 
             echo "🔨 Construyendo JAR"
             ./mvnw clean package
