@@ -56,10 +56,10 @@ jobs:
             ./mvnw clean package
 
             echo "🐳 Reconstruyendo imagen Docker..."
-            docker stop movies-api || true
-            docker rm movies-api || true
-            docker build -t movies-api .
+            sudo docker stop movies-api || true
+            sudo docker rm movies-api || true
+            sudo docker build -t movies-api .
 
             echo "🚀 Ejecutando contenedor en segundo plano..."
-            docker run -d --name movies-api -p 8080:8080 movies-api
+            sudo docker run -d --name movies-api -p 8080:8080 movies-api
           EOF
